@@ -15,12 +15,6 @@ const drive = google.drive({
 
 const uploadDrive = async (name) => {
     try {
-        const filePath = path.join(__dirname, '../musics', `${name}.mp3`); 
-        if (!fs.existsSync(filePath)) {
-            const error = new Error('Not exist file')
-            error.code = '404';
-            throw error;
-        }
         const uploadFile = await drive.files.create({
             requestBody: {
                 name: `${name}.mp3`,
@@ -28,7 +22,7 @@ const uploadDrive = async (name) => {
             },
             media: {
                 mineType: 'audio/mpeg',
-                body: fs.createReadStream(`musics/${name}.mp3`)
+                body: fs.createReadStream(`${name}.mp3`)
             }
         })
         return uploadFile.data;

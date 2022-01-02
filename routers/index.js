@@ -51,7 +51,7 @@ router.get('/getMusic', userService.isAuth, async (req, res) => {
         res.status(200).json({success: true, result: resTemplate});
         const videoReadableStream = ytdl(videoUrl, { filter: 'audioonly'});
         console.log('downloading file');
-        const videoWritableStream = fs.createWriteStream(`musics/${formatedVideoName}.mp3`); 
+        const videoWritableStream = fs.createWriteStream(`${formatedVideoName}.mp3`); 
         videoReadableStream.pipe(videoWritableStream);
         videoWritableStream.on('finish', async () => {
             console.log(`download ${formatedVideoName} done and uploading to drive`);
