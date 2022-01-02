@@ -4,7 +4,7 @@ class Youtube {
 
     getURL = (searchKey, pageToken) => {
         const apiKey = process.env.YOUTUBE_API_KEY;
-        const url = `https://youtube.googleapis.com/youtube/v3/search?q=${searchKey}&key=${apiKey}&maxResult=25&part=snippet&pageToken=${pageToken}`;
+        const url = `https://youtube.googleapis.com/youtube/v3/search?q=${searchKey}&key=${apiKey}&maxResult=25&part=snippet&regionCode=VN&pageToken=${pageToken}`;
         return encodeURI(url);
     }
 
