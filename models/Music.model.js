@@ -9,18 +9,15 @@ const musics = new mongoose.Schema({
         type: String,
         required: true
     },
-    nameFormatted: {
-        type: String,
-        required: true
-    },
-    ggDriveId: {
-        type: String
-    },
     authorName: {
         type: String,
         required: true
     },
     audioThumb: {
+        type: String,
+        required: true
+    },
+    videoLength: {
         type: String,
         required: true
     }

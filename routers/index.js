@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
 require('dotenv').config();
-const ytdl = require('ytdl-core');
-const {uploadDrive, publicUrl} = require('../services/drive');
 const musicService = require('../services/music');
 const youtubeService = require('../services/youtube');
 const userService = require('../services/user');
 const queueService = require('../services/queue');
-const path = require('path');
+const stream = require('youtube-audio-stream');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 router.get('/getMusic', userService.isAuth, async (req, res) => {
     try {
@@ -18,67 +18,38 @@ router.get('/getMusic', userService.isAuth, async (req, res) => {
             throw error;
         }
         console.log('Request getMusic');
-        const videoID = req.query.id; 
+        const youtubeId = req.query.id; 
         const token = req.headers.authorization;
-        const data = await musicService.getMusic(videoID);
+        const data = await musicService.getMusic(youtubeId);
         const userID = await userService.getUserIdFromToken(token);
-        if (data && data.ggDriveId) {
+        if (data) {
             const queueList = await queueService.insertQueueList(data, userID);
+            await queueService.updateCurrentMusic(userID, data);
             const response = {
                 queueList,
-                musicData: data
+                currentMusic: data
             }
             console.log('Response getMusic', response);
             res.status(200).json({success: true, result: response});
             return;
         }
-        const { videoName, authorName, formatedVideoName, videoUrl } = await musicService.getMusicInfo(videoID);
+        const { videoName, authorName, videoLength } = await musicService.getMusicInfo(youtubeId);
         const body = {
-            youtubeId: videoID,
+            youtubeId,
             name: videoName,
-            nameFormatted: formatedVideoName,
-            ggDriveId: '',
             authorName,
-            audioThumb: `https://img.youtube.com/vi/${videoID}/0.jpg`,
+            audioThumb: `https://img.youtube.com/vi/${youtubeId}/0.jpg`,
+            videoLength
         }
         const newData = await musicService.addMusic(body);
         const queueList = await queueService.insertQueueList(newData, userID);
+        await queueService.updateCurrentMusic(userID, newData);
         const resTemplate = {
             queueList,
-            musicData: newData
+            currentMusic: newData
         }
         console.log('Response getMusic', resTemplate);
         res.status(200).json({success: true, result: resTemplate});
-        const videoReadableStream = ytdl(videoUrl, { filter: 'audioonly'});
-        console.log('downloading file');
-        const videoWritableStream = fs.createWriteStream(`${formatedVideoName}.mp3`); 
-        videoReadableStream.pipe(videoWritableStream);
-        videoWritableStream.on('finish', async () => {
-            console.log(`download ${formatedVideoName} done and uploading to drive`);
-            const response = await uploadDrive(formatedVideoName);
-            if (!response || !response.id) {
-                res.status(200).json({success: false, error: 'Can not get link mp3', statusCode: 404});
-                return;
-            }
-            const publicUrlRes = await publicUrl(response.id);
-            if (!publicUrlRes.success) {
-                res.status(200).json({success: false, error: 'Can not get link mp3', statusCode: 404});
-                return;
-            }
-            const filePath = path.join(__dirname, '../musics', `${formatedVideoName}.mp3`); 
-            fs.unlink(filePath, (err) => {
-                if(err && err.code == 'ENOENT') {
-                    console.log("File doesn't exist, won't remove it.");
-                } else if (err) {
-                    console.log("Error occurred while trying to remove file");
-                } else {
-                    console.log(`Removed file`);
-                }
-            });
-            const ggDriveId = response.id;
-            await musicService.updateMusic(videoID, {ggDriveId});
-            await queueService.updateQueueList(newData.id, userID, ggDriveId);
-        });
     } catch (err) {
         if (err.code) {
             res.status(err.code).json({error: err.message});           
@@ -88,39 +59,19 @@ router.get('/getMusic', userService.isAuth, async (req, res) => {
     }
 });
 
-router.get('/stream', userService.isAuth, (req, res) => {
+router.get('/stream', async(req, res) => {
     try {
-        if (!req || !req.query || !req.query.name) {
-            const error = new Error('Missing music name')
+        if (!req || !req.query || !req.query.id) {
+            const error = new Error('Missing id');
             error.code = '403';
             throw error;
         }
-        const name = req.query.name;
-        console.log('start stream');
-        const filePath = path.join(__dirname, '../musics', `${name}.mp3`); 
-        const stat = fs.statSync(filePath);
-        const total = stat.size;
-        const range = req.headers.range;
-        if (!range) {
-            const error = new Error('Requires Range header')
-            error.code = '403';
-            throw error;
+        console.log('Streaming');
+        const url = `https://www.youtube.com/watch?v=${req.query.id}`;
+        for await (const chunk of stream(url)) {
+            res.write(chunk);
         }
-        const parts = range.replace(/bytes=/, '').split('-');
-        const partialStart = parts[0];
-        const partialEnd = parts[1];
-        const start = parseInt(partialStart, 10);
-        const end = partialEnd ? parseInt(partialEnd, 10) : total - 1;
-        const chunksize = (end - start) + 1;
-        res.writeHead(200, 
-            { 
-                'Content-Range': 'bytes ' + start + '-' + end + '/' + total,
-                'Accept-Ranges': 'bytes', 'Content-Length': chunksize,
-                'Content-Length': total, 
-                'Content-Type': 'audio/mpeg' 
-            });
-        const readStream = fs.createReadStream(filePath);
-        readStream.pipe(res);
+        res.end();
     } catch (err) {
         if (err.code) {
             res.status(err.code).json({error: err.message});           

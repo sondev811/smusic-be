@@ -37,28 +37,20 @@ class Music {
                 error.code = '403';
                 throw error;
             }
+            console.log(videoInfo);
             const videoName = videoInfo && videoInfo.videoDetails && videoInfo.videoDetails.title ?
             videoInfo.videoDetails.title : 'unknow';
+            const videoLength = videoInfo && videoInfo.videoDetails && videoInfo.videoDetails.lengthSeconds ?
+            videoInfo.videoDetails.lengthSeconds : 0;
             const authorName = videoInfo && videoInfo.videoDetails && videoInfo.videoDetails && videoInfo.videoDetails.author ? 
             videoInfo.videoDetails.author.name : '';
-            const formatVideoName = videoName.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '').toString('utf8').split(' ');
-            let formatedVideoName = '';
-            formatVideoName.map((item, index) => {
-                if (item.length > 0) {
-                    formatedVideoName += item;
-                    if (index < formatVideoName.length - 1) {
-                        formatedVideoName += '_';
-                    }
-                }
-            });
-            return { videoName, authorName, formatedVideoName, videoUrl };
+            return { videoName, authorName, videoLength };
         } catch (error) {
             const err = new Error('Can not find info video')
             err.code = '403';
             throw err;
         }
     }
-
 }
 
 module.exports = new Music();

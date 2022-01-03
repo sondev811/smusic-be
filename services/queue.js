@@ -17,23 +17,10 @@ class Queue {
         const queue = await queueModel.findOne(query);
         if (queue.list && !queue.list.length || 
             !queue.list.find(item => item._id.equals(music._id))) {
-            queue.list.push(music);
+            queue.list.unshift(music);
             await queueModel.findOneAndUpdate(query, {list : queue.list}, { new: true });
         }
         return queue.list;
-    }
-
-    async updateQueueList(musicId, userID, ggDriveId) {
-        const query = {userID};
-        const queue = await queueModel.findOne(query);
-        if (queue && queue.list && queue.list.length) {
-            queue.list.forEach(element => {
-                if (element._id.equals(musicId)) {
-                    element.ggDriveId = ggDriveId;
-                }
-            });
-            await queueModel.findOneAndUpdate(query, {list : queue.list}, { new: true } );
-        }
     }
 
     async updateCurrentMusic(userID, music) {
