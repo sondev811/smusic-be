@@ -66,11 +66,15 @@ router.get('/stream', async(req, res) => {
             error.code = '403';
             throw error;
         }
-        console.log('Streaming');
         const url = `https://www.youtube.com/watch?v=${req.query.id}`;
-        for await (const chunk of stream(url)) {
+        const streaming = stream(url);
+        streaming.video.on('end', () => {
+            streaming.video.end();
+        });
+        for await (const chunk of streaming) {
             res.write(chunk);
         }
+        console.log('end streaming res');
         res.end();
     } catch (err) {
         if (err.code) {
