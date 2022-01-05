@@ -15,7 +15,7 @@ class User {
             if (checkExistUser) {
                 return {
                     status: false,
-                    error: 'Exist username or email'
+                    error: 'Tên đăng nhập hoặc email đã tồn tại'
                 };
             }
             const hashPassword = await bcrypt.hash(password, 12);
@@ -89,14 +89,14 @@ class User {
         if (!user) {
             return {
                 status: false,
-                error: 'Wrong username or password'
+                error: 'Sai tên đăng nhập hoặc mật khẩu'
             };
         }
         const isMatchPassword = await bcrypt.compare(password, user.password);
         if (!isMatchPassword) {
             return {
                 status: false,
-                error: 'Wrong username or password'
+                error: 'Sai tên đăng nhập hoặc mật khẩu'
             };
         }
         const accessToken = this.generateAccessToken({id: user.id});
@@ -117,13 +117,13 @@ class User {
         const queue = await queueModel.findOne({userID: decoded.id});
         if (!user) {
             return {
-                status: false,
+                success: false,
                 error: 'Not exist email'
             };
         }
         user.password = null;
         return {
-            status: true,
+            success: true,
             userInfo: user,
             queue
         };

@@ -25,7 +25,7 @@ class Queue {
 
     async updateCurrentMusic(userID, music) {
         const query = {userID};
-        await queueModel.findOneAndUpdate(query, {currentMusic : music}, { new: true } );
+        return await queueModel.findOneAndUpdate(query, {currentMusic : music}, { new: true } );
     }
 
     async removeItemQueue(userID, musicId) {
