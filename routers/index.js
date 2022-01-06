@@ -3,7 +3,7 @@ const router = express.Router();
 require('dotenv').config();
 const userService = require('../services/user');
 const { search, getYoutubeTrending } = require('../controllers/youtube/youtube.controller');
-const { getMusic, getQueueList, updateCurrentMusic, removeItemQueue } = require('../controllers/music/music.controller');
+const { getMusic, getQueueList, updateCurrentMusic, removeItemQueue, updateQueueList } = require('../controllers/music/music.controller');
 const { getUserInfo, signUp, login} = require('../controllers/user/user.controller');
 const ytdl = require('ytdl-core');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
@@ -141,6 +141,45 @@ router.get('/getQueueList', userService.isAuth, async (req, res) => {
         const token = req.headers.authorization;
         const response = await getQueueList(token);
         console.log('Response getQueueList', response);
+        res.status(200).json({success: true, result: response});
+    } catch (err) {
+        if (err.code) {
+            res.status(err.code).json({error: err.message});           
+        } else {
+            res.status(500).json({error: err.message});         
+        }    
+    }
+    
+});
+
+router.get('/getQueueList', userService.isAuth, async (req, res) => {
+    try {
+        console.log('Request getQueueList');
+        const token = req.headers.authorization;
+        const response = await getQueueList(token);
+        console.log('Response getQueueList', response);
+        res.status(200).json({success: true, result: response});
+    } catch (err) {
+        if (err.code) {
+            res.status(err.code).json({error: err.message});           
+        } else {
+            res.status(500).json({error: err.message});         
+        }    
+    }
+    
+});
+
+router.post('/updateQueueList', userService.isAuth, async (req, res) => {
+    try {
+        if (!req || !req.body) {
+            const error = new Error('Wrong body');
+            error.code = '403';
+            throw error;
+        }
+        console.log('Request updateQueueList');
+        const token = req.headers.authorization;
+        const response = await updateQueueList(token, req.body);
+        console.log('Response updateQueueList', response);
         res.status(200).json({success: true, result: response});
     } catch (err) {
         if (err.code) {

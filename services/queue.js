@@ -23,6 +23,27 @@ class Queue {
         return queue.list;
     }
 
+    async updateQueueList(userID, body) {
+        try {
+            const query = {userID}
+            const {sourceIndex, destinationIndex} = body;
+            const queue = await queueModel.findOne(query);
+            if (!queue || !queue.list) {
+                const error = new Error(err.message);
+                error.code = '403';
+                throw error;
+            }
+            const dragItemSource = queue.list[sourceIndex];
+            let items = queue.list.filter(item => item !== dragItemSource);
+            items.splice(destinationIndex, 0, dragItemSource);
+            const newQueue = await queueModel.findOneAndUpdate(query, {list: items}, { new: true });
+            return newQueue.list;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+
     async updateCurrentMusic(userID, music) {
         const query = {userID};
         return await queueModel.findOneAndUpdate(query, {currentMusic : music}, { new: true } );

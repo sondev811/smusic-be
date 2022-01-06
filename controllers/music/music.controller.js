@@ -30,7 +30,7 @@ const getMusic = async (youtubeId, token) => {
             currentMusic: newData
         }
     } catch (error) {
-        
+        console.log(error);
     }
 }
 
@@ -76,4 +76,16 @@ const removeItemQueue = async (token, musicId) => {
     }
 }
 
-module.exports = {getMusic, getQueueList, updateCurrentMusic, removeItemQueue};
+const updateQueueList = async(token, body) => {
+    try {
+        const userID = await userService.getUserIdFromToken(token);
+        const result = await queueService.updateQueueList(userID, body);
+        return {
+            queue: result
+        }
+    } catch (err) {
+       console.log(err);
+    }
+}
+
+module.exports = {getMusic, getQueueList, updateCurrentMusic, removeItemQueue, updateQueueList};
