@@ -39,8 +39,10 @@ router.get('/stream', async(req, res) => {
             error.code = '403';
             throw error;
         }
+        console.log('Request stream');
         const videoId = req.query.id;
         const videoInfo = await ytdl.getInfo(videoId);
+        if (!videoInfo || !videoInfo.formats) return;
         let audioFormat = ytdl.chooseFormat(videoInfo.formats, {
             filter: "audioonly",
             quality: "highestaudio"
@@ -50,7 +52,6 @@ router.get('/stream', async(req, res) => {
 
         const rangeHeader = req.headers.range || null;
         const rangePosition = (rangeHeader) ? rangeHeader.replace(/bytes=/, "").split("-") : null;
-        console.log(`rangePosition`, rangePosition);
         const startRange = rangePosition ? parseInt(rangePosition[0], 10) : 0;
         const endRange = rangePosition && rangePosition[1].length > 0 ? parseInt(rangePosition[1], 10) : contentLength - 1;
         const chunksize = (endRange - startRange) + 1;
