@@ -8,12 +8,12 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-const corsOptions ={
+const options ={
    origin:'*', 
    credentials:true,            //access-control-allow-credentials:true
    optionSuccessStatus:200,
 };
-app.use(cors(corsOptions));
+app.use(cors(options));
 app.use(bodyParser.json());
 connectDB();
 
