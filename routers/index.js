@@ -32,7 +32,7 @@ router.get('/getMusic', userService.isAuth, async (req, res) => {
     }
 });
 
-router.get('/stream', async(req, res) => {
+router.get('/stream', userService.isAuth, async(req, res) => {
     try {
         if (!req || !req.query || !req.query.id) {
             const error = new Error('Missing id');
@@ -42,30 +42,16 @@ router.get('/stream', async(req, res) => {
         console.log('Request stream');
         const videoId = req.query.id;
         const videoInfo = await ytdl.getInfo(videoId);
-        if (!videoInfo || !videoInfo.formats) return;
+        if (!videoInfo || !videoInfo.formats) {
+          res.status(200).json({success: false, error: 'not found', statusCode: 404});
+        };
         let audioFormat = ytdl.chooseFormat(videoInfo.formats, {
             filter: "audioonly",
             quality: "highestaudio"
         });
-
-        const { itag, container, contentLength } = audioFormat
-
-        const rangeHeader = req.headers.range || null;
-        const rangePosition = (rangeHeader) ? rangeHeader.replace(/bytes=/, "").split("-") : null;
-        const startRange = rangePosition ? parseInt(rangePosition[0], 10) : 0;
-        const endRange = rangePosition && rangePosition[1].length > 0 ? parseInt(rangePosition[1], 10) : contentLength - 1;
-        const chunksize = (endRange - startRange) + 1;
-        
-        res.writeHead(206, {
-            'Content-Type': `audio/${container}`,
-            'Content-Length': chunksize,
-            "Content-Range": "bytes " + startRange + "-" + endRange + "/" + contentLength,
-            "Accept-Ranges": "bytes",
-        })
-
-        const range = { start: startRange, end: endRange };
-        const audioStream = ytdl(videoId, { filter: format => format.itag === itag, range });
-        audioStream.pipe(res);
+        const result = { url: audioFormat.url };
+        console.log('Response stream', result);
+        res.status(200).json({success: true, result});
     } catch (err) {
         if (err.code) {
             res.status(err.code).json({error: err.message});           
