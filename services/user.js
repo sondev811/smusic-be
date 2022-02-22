@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 class User {
     constructor() {
-        this.maxAge = 1 * 24 * 60 * 60;
+        this.maxAge = 30 * 24 * 60 * 60;
     }
    
     async createUser(body) {
