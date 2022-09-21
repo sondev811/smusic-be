@@ -1,7 +1,8 @@
 const userModel = require('../models/User.model');
-const queueModel = require('../models/Queue.model');
+const playlistModel = require('../models/Playlist.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const PlaylistModel = require('../models/Playlist.model');
 require('dotenv').config();
 class User {
     constructor() {
@@ -22,15 +23,20 @@ class User {
             const user = new userModel({
                 email,
                 password: hashPassword,
-                name
+                name,
+                currentPlaylist: '',
+                queueListId: ''
             });
             await user.save();
-            const queue = new queueModel({
-                list: [],
-                userID: user._id,
-                currentMusic: ''
+            const playlist = new PlaylistModel({
+              list: [],
+              userID: user._id,
+              playlistName: 'Hàng chờ',
+              currentMusic: ''
             });
-            await queue.save();
+            await playlist.save();
+            const query = {email: user.email}
+            await userModel.findOneAndUpdate(query, {queueListId: playlist._id, currentPlaylist: playlist._id});
             const response = {
                 status: true,
                 error: null,
@@ -114,7 +120,7 @@ class User {
     async getUserInfo(token) { 
         const decoded = await this.verifyAccessToken(token);
         const user = await userModel.findOne({_id: decoded.id});
-        const queue = await queueModel.findOne({userID: decoded.id});
+        const queue = await playlistModel.findOne({userID: decoded.id, _id: user.currentPlaylist});
         if (!user) {
             return {
                 success: false,
@@ -127,6 +133,29 @@ class User {
             userInfo: user,
             queue
         };
+    }
+
+    async updateCurrentPlaylist(_id, playlistId) {
+      const query = { _id }
+      await userModel.findOneAndUpdate(query, {currentPlaylist : playlistId});
+      const user = await userModel.findOne({_id});
+      console.log(user.currentPlaylist);
+      console.log(playlistId);
+      const queryPlaylist = {_id: playlistId, userID: _id};
+      const queue = await playlistModel.findOne(queryPlaylist);
+      console.log(queue);
+      if (!user) {
+        return {
+            success: false,
+            error: 'Not exist email'
+        };
+      }
+      user.password = null;
+      return {
+          success: true,
+          userInfo: user,
+          queue
+      };
     }
 
 }

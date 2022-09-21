@@ -1,6 +1,6 @@
 const userService = require('../../services/user');
 
-const getUserInfo = async(handleToken) => {
+const getUserInfo = async (handleToken) => {
     try {
         const result = await userService.getUserInfo(handleToken);
         if (!result.success) {
@@ -10,13 +10,29 @@ const getUserInfo = async(handleToken) => {
             success: true,
             data: {
                 userInfo: result.userInfo,
-                queue: result.queue.list,
-                currentMusic: result.queue.currentMusic
+                queue: result.queue,
             }
         }
     } catch (error) {
         
     }
+}
+
+const updateCurrentPlaylist = async (token, playlistID) => {
+  try {
+    const userID = await userService.getUserIdFromToken(token);
+    const result = await userService.updateCurrentPlaylist(userID, playlistID);
+    if (!result.success) {
+        return result;
+    }
+    return {
+        success: true,
+        userInfo: result.userInfo,
+        queue: result.queue
+    }
+  } catch (error) {
+      
+  }
 }
 
 const signUp = async (body) => {
@@ -27,4 +43,4 @@ const login = async (req) => {
     return await userService.login(req);
 }
 
-module.exports = {getUserInfo, signUp, login};
+module.exports = {getUserInfo, signUp, login, updateCurrentPlaylist};

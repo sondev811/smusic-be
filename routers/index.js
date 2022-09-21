@@ -3,34 +3,13 @@ const router = express.Router();
 require('dotenv').config();
 const userService = require('../services/user');
 const { search, getYoutubeTrending } = require('../controllers/youtube/youtube.controller');
-const { getMusic, getQueueList, updateCurrentMusic, removeItemQueue, updateQueueList } = require('../controllers/music/music.controller');
-const { getUserInfo, signUp, login} = require('../controllers/user/user.controller');
+const { getMusic } = require('../controllers/music/music.controller');
+const { getUserInfo, signUp, login, updateCurrentPlaylist} = require('../controllers/user/user.controller');
 const ytdl = require('ytdl-core');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffmpeg = require('fluent-ffmpeg');
+const { createPlaylist, getPlaylist, getSongsPlaylist, insertSongPlaylist, removeItemPlaylist, removePlaylist, updateCurrentMusic, updateQueueList } = require('../controllers/playlist/playlist.controller');
 ffmpeg.setFfmpegPath(ffmpegPath);
-
-router.get('/getMusic', userService.isAuth, async (req, res) => {
-    try {
-        if (!req || !req.query || !req.query.id) {
-            const error = new Error('Missing id')
-            error.code = '403';
-            throw error;
-        }
-        console.log('Request getMusic');
-        const youtubeId = req.query.id; 
-        const token = req.headers.authorization;
-        const result = await getMusic(youtubeId, token);
-        console.log('Response getMusic', result);
-        res.status(200).json({success: true, result});
-    } catch (err) {
-        if (err.code) {
-            res.status(err.code).json({error: err.message});           
-        } else {
-            res.status(500).json({error: err.message});         
-        }     
-    }
-});
 
 router.get('/stream', userService.isAuth, async(req, res) => {
     try {
@@ -122,38 +101,30 @@ router.get('/getUserInfo', userService.isAuth, async (req, res) => {
     
 });
 
-router.get('/getQueueList', userService.isAuth, async (req, res) => {
-    try {
-        console.log('Request getQueueList');
-        const token = req.headers.authorization;
-        const response = await getQueueList(token);
-        console.log('Response getQueueList', response);
-        res.status(200).json({success: true, result: response});
-    } catch (err) {
-        if (err.code) {
-            res.status(err.code).json({error: err.message});           
-        } else {
-            res.status(500).json({error: err.message});         
-        }    
+router.get('/updateCurrentPlaylist', userService.isAuth, async (req, res) => {
+  try {
+    if (!req || !req.query || !req.query.playlistId) {
+        const error = new Error('Missing playlistId')
+        error.code = '403';
+        throw error;
     }
-    
-});
-
-router.get('/getQueueList', userService.isAuth, async (req, res) => {
-    try {
-        console.log('Request getQueueList');
-        const token = req.headers.authorization;
-        const response = await getQueueList(token);
-        console.log('Response getQueueList', response);
-        res.status(200).json({success: true, result: response});
-    } catch (err) {
-        if (err.code) {
-            res.status(err.code).json({error: err.message});           
-        } else {
-            res.status(500).json({error: err.message});         
-        }    
+    console.log('Request updateCurrentPlaylist');
+    const token = req.headers.authorization;
+    const playlistId = req.query.playlistId;
+    const response = await updateCurrentPlaylist(token, playlistId);
+    console.log('Response updateCurrentPlaylist', response);
+    if (!response || !response.success) {
+        res.status(401).json({error: 'Not access'});
     }
-    
+    res.status(200).json({success: true, result: response});
+} catch (err) {
+    if (err.code) {
+        res.status(err.code).json({error: err.message});           
+    } else {
+        res.status(500).json({error: err.message});         
+    }    
+}
+  
 });
 
 router.post('/updateQueueList', userService.isAuth, async (req, res) => {
@@ -180,15 +151,17 @@ router.post('/updateQueueList', userService.isAuth, async (req, res) => {
 
 router.get('/updateCurrentMusic', userService.isAuth, async (req, res) => {
     try {
-        if (!req || !req.query || !req.query.youtubeId) {
-            const error = new Error('Missing musicId')
+        if (!req || !req.query || !req.query.youtubeId || !req.query.playlistId) {
+            const error = new Error('Missing musicId || playlistId')
             error.code = '403';
             throw error;
         }
         console.log('Request updateCurrentMusic');
         const token = req.headers.authorization;
         const youtubeId = req.query.youtubeId;
-        const response = await updateCurrentMusic(token, youtubeId);
+        const playlistId = req.query.playlistId;
+        const music = await getMusic(youtubeId);
+        const response = await updateCurrentMusic(token, music, playlistId);
         console.log('Response updateCurrentMusic', response);
         if (!response || !response.success) {
             res.status(401).json({error: 'Not access'});
@@ -204,18 +177,127 @@ router.get('/updateCurrentMusic', userService.isAuth, async (req, res) => {
     
 });
 
-router.get('/removeItemQueue', userService.isAuth, async (req, res) => {
+router.post('/createPlaylist', userService.isAuth, async (req, res) => {
+  try {
+    if (!req || !req.body || !req.body.playlistName) {
+      const error = new Error('Missing playlistName')
+      error.code = '403';
+      throw error;
+    }
+      const token = req.headers.authorization;
+      const response = await createPlaylist(token, req.body.playlistName);
+      console.log('Response create playlist', response);
+      res.status(200).json({success: true, result: response});
+  } catch (err) {
+      if (err.code) {
+          res.status(err.code).json({error: err.message});           
+      } else {
+          res.status(500).json({error: err.message});         
+      }    
+  }
+  
+});
+
+router.get('/getPlaylist', userService.isAuth, async (req, res) => {
+  try {
+      console.log('Request getPlaylist');
+      const token = req.headers.authorization;
+      const response = await getPlaylist(token);
+      console.log('Response getPlaylist', response);
+      res.status(200).json({success: true, result: response});
+  } catch (err) {
+      if (err.code) {
+          res.status(err.code).json({error: err.message});           
+      } else {
+          res.status(500).json({error: err.message});         
+      }    
+  }
+  
+});
+
+router.get('/removePlaylist', userService.isAuth, async (req, res) => {
+  try {
+    if (!req || !req.query || !req.query.playlistId) {
+      const error = new Error('Missing id')
+      error.code = '403';
+      throw error;
+    }
+    console.log('Request removePlaylist');
+    const token = req.headers.authorization;
+    const response = await removePlaylist(token, req.query.playlistId);
+    console.log('Response removePlaylist', response);
+    res.status(200).json({success: true, result: response});
+  } catch (err) {
+      if (err.code) {
+          res.status(err.code).json({error: err.message});           
+      } else {
+          res.status(500).json({error: err.message});         
+      }    
+  }
+  
+});
+
+router.get('/getSongsPlaylist', userService.isAuth, async (req, res) => {
+  try {
+    if (!req || !req.query || !req.query.playlistId) {
+      const error = new Error('Missing playlistId')
+      error.code = '403';
+      throw error;
+    }
+      console.log('Request getSongsPlaylist');
+      const token = req.headers.authorization;
+      const response = await getSongsPlaylist(token, req.query.playlistId);
+      console.log('Response getSongsPlaylist', response);
+      res.status(200).json({success: true, result: response});
+  } catch (err) {
+      if (err.code) {
+          res.status(err.code).json({error: err.message});           
+      } else {
+          res.status(500).json({error: err.message});         
+      }    
+  }
+  
+});
+
+router.get('/insertSongPlaylist', userService.isAuth, async (req, res) => {
+  try {
+    if (!req || !req.query || !req.query.id || !req.query.playlistId) {
+      const error = new Error('Missing id')
+      error.code = '403';
+      throw error;
+    }
+    console.log('Request insertSongPlaylist');
+    const youtubeId = req.query.id; 
+    const playlistId = req.query.playlistId;
+    const token = req.headers.authorization;
+    const userID = await userService.getUserIdFromToken(token);
+    const music = await getMusic(youtubeId);
+    const response = await insertSongPlaylist(userID, playlistId, music);
+    console.log('Response insertSongPlaylist', response);
+    res.status(200).json({success: true, result: response});
+  } catch (err) {
+      if (err.code) {
+          res.status(err.code).json({error: err.message});           
+      } else {
+          res.status(500).json({error: err.message});         
+      }    
+  }
+  
+});
+
+router.get('/removeItemPlaylist', userService.isAuth, async (req, res) => {
     try {
-        if (!req || !req.query || !req.query.musicId) {
-            const error = new Error('Missing musicId')
+        if (!req || !req.query || !req.query.musicId || !req.query.playlistId) {
+            const error = new Error('Missing musicId || playlist')
             error.code = '403';
             throw error;
         }
-        console.log('Request removeItemQueue');
+        console.log('Request removeItemPlaylist');
         const token = req.headers.authorization;
         const musicId = req.query.musicId;
-        const response = await removeItemQueue(token, musicId);
-        console.log('Response removeItemQueue', response);
+        const playlistId = req.query.playlistId;
+        const response = await removeItemPlaylist(token, playlistId, musicId);
+        console.log('Response removeItemPlaylist', response);
         res.status(200).json({success: true, result: response});
     } catch (err) {
         if (err.code) {

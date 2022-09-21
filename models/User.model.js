@@ -12,6 +12,12 @@ const users = new mongoose.Schema({
     name: {
         type: String,
         required: true
+    },
+    currentPlaylist: {
+        type: String,
+    },
+    queueListId: {
+      type: String
     }
 });
 
