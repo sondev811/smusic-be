@@ -25,10 +25,13 @@ router.get('/stream', userService.isAuth, async(req, res) => {
           res.status(200).json({success: false, error: 'not found', statusCode: 404});
         };
         let audioFormat = ytdl.chooseFormat(videoInfo.formats, {
-            filter: "audioonly",
-            quality: "highestaudio"
+          filter: "audioonly",
+          quality: "highestaudio"
         });
-        const result = { url: audioFormat.url };
+        const filterData = videoInfo.formats.filter(item => item?.mimeType.includes('audio/mp4') && (item?.audioQuality === 'AUDIO_QUALITY_MEDIUM' || 
+        item?.audioQuality === 'AUDIO_QUALITY_HIGH'));
+        const data = filterData && filterData[0] ? filterData[0] : audioFormat; 
+        const result = { url: data.url, type: data.mimeType, quality: data.audioQuality };
         console.log('Response stream', result);
         res.status(200).json({success: true, result});
     } catch (err) {
