@@ -1,4 +1,5 @@
 const youtubeService = require('../../services/youtube');
+const userService = require('../../services/user');
 
 let ytAPIKey = 0;
 const search = async(keySearch, pageToken) => {
@@ -25,12 +26,46 @@ const search = async(keySearch, pageToken) => {
     }
 }
 
-const getYoutubeTrending = async (pageToken) => {
+const searchRecommend = (keySearch) => {
+  try {
+    return youtubeService.searchRecommend(keySearch);
+  } catch (error) {
+      const err = new Error('Can not search');
+      err.code = '403';
+      throw err;
+  }
+}
+
+const saveSearchHistory = async (token, body) => {
+  try {
+    const userID = await userService.getUserIdFromToken(token);
+    return youtubeService.saveSearchHistory(userID, body);
+  } catch (error) {
+    const err = new Error('Can not save history.');
+    err.code = '404';
+    throw err;
+  }
+}
+
+const getYoutubeTrending = (pageToken) => {
     try {
-        return await youtubeService.getYoutubeTrending(pageToken);
+        return youtubeService.getYoutubeTrending(pageToken);
     } catch (error) {
-        
+      const err = new Error('Can not get youtube trending.');
+      err.code = '404';
+      throw err;
     }
 }
 
-module.exports = {search, getYoutubeTrending};
+const getSearchHistory = async (token) => {
+  try {
+    const userID = await userService.getUserIdFromToken(token);
+    return youtubeService.getSearchHistory(userID);
+  } catch (error) {
+    const err = new Error('Can not get search history.');
+    err.code = '404';
+    throw err;
+  }
+}
+
+module.exports = {search, getYoutubeTrending, searchRecommend, saveSearchHistory, getSearchHistory};

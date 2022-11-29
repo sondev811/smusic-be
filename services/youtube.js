@@ -1,5 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
+const youtubeModel = require('../models/Youtube.model');
 class Youtube {
 
     getURL = (searchKey, pageToken, apiKey) => {
@@ -33,6 +34,47 @@ class Youtube {
             err.code = '403';
             throw err;
         });
+    }
+
+    async searchRecommend(searchKey) {
+      try {
+        const url = `http://suggestqueries.google.com/complete/search?ds=yt&client=youtube&hjson=t&cp=1&q=${searchKey}&format=5&alt=json`;
+        const res = await axios.get(url);
+        if (!res || !res.data || !res.data.length) throw Error('Can not search with this key!!!');
+        const data = res.data[1].map(element => element[0]);
+        return data;
+      } catch (error) {
+        throw Error(error)        
+      }
+    }
+
+    async saveSearchHistory(userID, body) {
+      try {
+        const filter = { userID };
+        const history = await youtubeModel.findOne(filter);
+        if (!history) {
+          const newHistory = new youtubeModel({
+            list: [],
+            userID
+          });
+          newHistory.list.push(body.keySearch);
+          return await history.save();
+        }
+        history.list.unshift(body.keySearch);
+        if (history.list.length > 10) history.list.pop();
+        const update = { list: history.list };
+        return await youtubeModel.findOneAndUpdate(filter, update);
+      } catch (error) {
+        throw Error(error);
+      }
+    }
+
+    getSearchHistory = async (userID) => {
+      try {
+        return youtubeModel.findOne({userID})
+      } catch (error) {
+        throw Error(error);        
+      }
     }
 }
 
