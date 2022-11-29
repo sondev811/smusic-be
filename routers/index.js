@@ -67,14 +67,15 @@ router.get('/searchRecommend', userService.isAuth, async (req, res) => {
 router.get('/search', userService.isAuth, async (req, res) => {
     try {
         if (!req || !req.query || !req.query.key) {
-            const error = new Error('Missing key search')
+            const error = new Error('Missing key search or pageToken')
             error.code = '403';
             throw error;
         }
         console.log('Request search');
         const keySearch = req.query.key;
         const pageToken = req.query.pageToken;
-        const result = await search(keySearch, pageToken);
+        const token = req.headers.authorization;
+        const result = await search(keySearch, pageToken, token);
         console.log('Response search', result);
         res.status(200).json({success: true, result});
     } catch (err) {
@@ -87,26 +88,26 @@ router.get('/search', userService.isAuth, async (req, res) => {
     
 });
 
-router.post('/saveSearchHistory', userService.isAuth, async(req, res) => {
-  try {
-    if (!req || !req.body) {
-        const error = new Error('Wrong body');
-        error.code = '403';
-        throw error;
-    }
-    console.log('Request saveSearchHistory.');
-    const token = req.headers.authorization;
-    const response = await saveSearchHistory(token, req.body);
-    console.log('Response saveSearchHistory', response);
-    res.status(200).json({success: true, result: response});
-} catch (err) {
-    if (err.code) {
-        res.status(err.code).json({error: err.message});           
-    } else {
-        res.status(500).json({error: err.message});         
-    }    
-}
-})
+// router.post('/saveSearchHistory', userService.isAuth, async(req, res) => {
+//   try {
+//     if (!req || !req.body) {
+//         const error = new Error('Wrong body');
+//         error.code = '403';
+//         throw error;
+//     }
+//     console.log('Request saveSearchHistory.');
+//     const token = req.headers.authorization;
+//     const response = await saveSearchHistory(token, req.body);
+//     console.log('Response saveSearchHistory', response);
+//     res.status(200).json({success: true, result: response});
+// } catch (err) {
+//     if (err.code) {
+//         res.status(err.code).json({error: err.message});           
+//     } else {
+//         res.status(500).json({error: err.message});         
+//     }    
+// }
+// })
 
 router.get('/getYoutubeTrending', userService.isAuth, async (req, res) => {
     try {

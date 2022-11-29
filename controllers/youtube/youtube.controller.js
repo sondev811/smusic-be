@@ -2,7 +2,7 @@ const youtubeService = require('../../services/youtube');
 const userService = require('../../services/user');
 
 let ytAPIKey = 0;
-const search = async(keySearch, pageToken) => {
+const search = async(keySearch, pageToken, token) => {
     try {
         if (ytAPIKey > 3) {
             ytAPIKey = 0
@@ -14,6 +14,8 @@ const search = async(keySearch, pageToken) => {
         const key = `YOUTUBE_API_KEY${ytAPIKey}`;
         const apiKey = process.env[key];
         const response = await youtubeService.search(keySearch, pageToken, apiKey);
+        const userID = await userService.getUserIdFromToken(token);
+        await youtubeService.saveSearchHistory(userID, keySearch);
         if(!response.success) {
             return await search(keySearch, pageToken);
         } 
@@ -36,16 +38,16 @@ const searchRecommend = (keySearch) => {
   }
 }
 
-const saveSearchHistory = async (token, body) => {
-  try {
-    const userID = await userService.getUserIdFromToken(token);
-    return youtubeService.saveSearchHistory(userID, body);
-  } catch (error) {
-    const err = new Error('Can not save history.');
-    err.code = '404';
-    throw err;
-  }
-}
+// const saveSearchHistory = async (token, body) => {
+//   try {
+//     const userID = await userService.getUserIdFromToken(token);
+//     return youtubeService.saveSearchHistory(userID, body);
+//   } catch (error) {
+//     const err = new Error('Can not save history.');
+//     err.code = '404';
+//     throw err;
+//   }
+// }
 
 const getYoutubeTrending = (pageToken) => {
     try {
@@ -68,4 +70,4 @@ const getSearchHistory = async (token) => {
   }
 }
 
-module.exports = {search, getYoutubeTrending, searchRecommend, saveSearchHistory, getSearchHistory};
+module.exports = {search, getYoutubeTrending, searchRecommend, getSearchHistory};

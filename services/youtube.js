@@ -48,7 +48,7 @@ class Youtube {
       }
     }
 
-    async saveSearchHistory(userID, body) {
+    async saveSearchHistory(userID, keySearch) {
       try {
         const filter = { userID };
         const history = await youtubeModel.findOne(filter);
@@ -57,10 +57,10 @@ class Youtube {
             list: [],
             userID
           });
-          newHistory.list.push(body.keySearch);
-          return await history.save();
+          newHistory.list.push(keySearch);
+          return await newHistory.save();
         }
-        history.list.unshift(body.keySearch);
+        history.list.unshift(keySearch);
         if (history.list.length > 10) history.list.pop();
         const update = { list: history.list };
         return await youtubeModel.findOneAndUpdate(filter, update);
