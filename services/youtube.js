@@ -38,7 +38,7 @@ class Youtube {
 
     async searchRecommend(searchKey) {
       try {
-        const url = `http://suggestqueries.google.com/complete/search?ds=yt&client=youtube&hjson=t&cp=1&q=${searchKey}&format=5&alt=json`;
+        const url = `http://suggestqueries.google.com/complete/search?hl=vn&ds=yt&client=youtube&hjson=t&cp=1&q=${searchKey}&format=10&alt=json`;
         const res = await axios.get(url);
         if (!res || !res.data || !res.data.length) throw Error('Can not search with this key!!!');
         const data = res.data[1].map(element => element[0]);
