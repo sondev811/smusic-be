@@ -2,7 +2,7 @@ const youtubeService = require('../../services/youtube');
 const userService = require('../../services/user');
 
 let ytAPIKey = 0;
-const search = async(keySearch, pageToken, token) => {
+const search = async(token, keySearch, pageToken) => {
     try {
         if (ytAPIKey > 3) {
             ytAPIKey = 0
@@ -17,7 +17,7 @@ const search = async(keySearch, pageToken, token) => {
         const userID = await userService.getUserIdFromToken(token);
         await youtubeService.saveSearchHistory(userID, keySearch);
         if(!response.success) {
-            return await search(keySearch, pageToken);
+            return await search(token, keySearch, pageToken);
         } 
         ytAPIKey = 0
         return response.data

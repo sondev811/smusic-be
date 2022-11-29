@@ -75,7 +75,7 @@ router.get('/search', userService.isAuth, async (req, res) => {
         const keySearch = req.query.key;
         const pageToken = req.query.pageToken;
         const token = req.headers.authorization;
-        const result = await search(keySearch, pageToken, token);
+        const result = await search(token, keySearch, pageToken);
         console.log('Response search', result);
         res.status(200).json({success: true, result});
     } catch (err) {

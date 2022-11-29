@@ -60,6 +60,10 @@ class Youtube {
           newHistory.list.push(keySearch);
           return await newHistory.save();
         }
+        const index = history.list.indexOf(keySearch);
+        if (index !== -1) {
+          history.list.splice(index, 1);
+        }
         history.list.unshift(keySearch);
         if (history.list.length > 10) history.list.pop();
         const update = { list: history.list };
