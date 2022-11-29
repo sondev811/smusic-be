@@ -4,7 +4,7 @@ const youtubeModel = require('../models/Youtube.model');
 class Youtube {
 
     getURL = (searchKey, pageToken, apiKey) => {
-        const url = `https://youtube.googleapis.com/youtube/v3/search?q=${searchKey}&key=${apiKey}&maxResults=10&part=snippet&regionCode=VN&pageToken=${pageToken}`;
+        const url = `https://youtube.googleapis.com/youtube/v3/search?q=${searchKey}&key=${apiKey}&maxResults=10&part=snippet&regionCode=VN&pageToken=${pageToken}&type=video`;
         return encodeURI(url);
     }
 
@@ -38,10 +38,9 @@ class Youtube {
 
     async searchRecommend(searchKey) {
       try {
-        const url = `http://suggestqueries.google.com/complete/search?hl=vn&ds=yt&client=youtube&hjson=t&cp=1&q=${searchKey}&format=10&alt=json`;
+        const url = `http://suggestqueries.google.com/complete/search?hl=vn&ds=yt&client=youtube&hjson=t&cp=1&gl=vn&alt=json&q=${searchKey}`;
         const res = await axios.get(url);
         if (!res || !res.data || !res.data.length) throw Error('Can not search with this key!!!');
-        console.log(url);
         const data = res.data[1].map(element => element[0]);
         return data;
       } catch (error) {
