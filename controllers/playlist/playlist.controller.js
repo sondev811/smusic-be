@@ -13,6 +13,15 @@ const getPlaylist = async (token) => {
     }
 }
 
+const getPlaylistById = async (token, playlistId) => {
+  try {
+    const userID = await userService.getUserIdFromToken(token);
+    return await playlistService.getPlaylistById(userID, playlistId)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 const createPlaylist = async (token, playlistName) => {
   try {
       const userID = await userService.getUserIdFromToken(token);
@@ -31,7 +40,7 @@ const removePlaylist = async (token, playlistId) => {
           playlist: result
       }
   } catch (error) {
-      
+      throw error;
   }
 }
 
@@ -97,4 +106,14 @@ const updateQueueList = async(token, body) => {
     }
 }
 
-module.exports = { createPlaylist, getPlaylist, removePlaylist, getSongsPlaylist, insertSongPlaylist, removeItemPlaylist, updateCurrentMusic, updateQueueList };
+module.exports = { 
+  createPlaylist, 
+  getPlaylist, 
+  removePlaylist, 
+  getSongsPlaylist, 
+  insertSongPlaylist, 
+  removeItemPlaylist, 
+  updateCurrentMusic, 
+  updateQueueList, 
+  getPlaylistById 
+};

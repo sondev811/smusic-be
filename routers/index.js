@@ -8,7 +8,7 @@ const { getUserInfo, signUp, login, updateCurrentPlaylist} = require('../control
 const ytdl = require('ytdl-core');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffmpeg = require('fluent-ffmpeg');
-const { createPlaylist, getPlaylist, getSongsPlaylist, insertSongPlaylist, removeItemPlaylist, removePlaylist, updateCurrentMusic, updateQueueList } = require('../controllers/playlist/playlist.controller');
+const { createPlaylist, getPlaylist, getSongsPlaylist, insertSongPlaylist, removeItemPlaylist, removePlaylist, updateCurrentMusic, updateQueueList, getPlaylistById } = require('../controllers/playlist/playlist.controller');
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 router.get('/stream', userService.isAuth, async(req, res) => {
@@ -275,6 +275,27 @@ router.get('/getPlaylist', userService.isAuth, async (req, res) => {
   }
   
 });
+
+router.get('/getPlaylistById', userService.isAuth, async (req, res) => {
+  try {
+    if (!req || !req.query || !req.query.playlistId) {
+      const error = new Error('Missing id')
+      error.code = '403';
+      throw error;
+    }
+    console.log('Request getPlaylistById');
+    const token = req.headers.authorization;
+    const response = await getPlaylistById(token, req.query.playlistId);
+    console.log('Response getPlaylistById', response);
+    res.status(200).json({success: true, result: response});
+  } catch (err) {
+    if (err.code) {
+      res.status(err.code).json({error: err.message});           
+    } else {
+        res.status(500).json({error: err.message});         
+    }   
+  }
+})
 
 router.get('/removePlaylist', userService.isAuth, async (req, res) => {
   try {

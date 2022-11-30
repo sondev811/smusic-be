@@ -1,4 +1,5 @@
 const playlistModel = require('../models/Playlist.model');
+const userModel = require('../models/User.model');
 
 class Playlist {
 
@@ -26,10 +27,35 @@ class Playlist {
     return playlist;
   }
 
+  async getPlaylistById(userID, _id) {
+    try {
+      const query = { userID, _id};
+      const playlist = await playlistModel.findOne(query);
+      return playlist;
+    } catch (error) {
+      console.log(error)    ;  
+    }
+  }
+
   async removePlaylist(userID, playlistId) {
-    const query = {userID, _id: playlistId};
-    const playlist = await playlistModel.findOneAndRemove(query);
-    return playlist;
+    try {
+      const query = {userID, _id: playlistId};
+      const user = await userModel.findOne({_id: userID});
+      if (!user) {
+        const error = new Error();
+        error.code = '401';
+        throw error;
+      }
+      if (user.queueListId === playlistId) {
+        const error = new Error('Can not remove playlist');
+        error.code = '403';
+        throw error;
+      }
+      const playlist = await playlistModel.findOneAndRemove(query);
+      return playlist;
+    } catch (error) {
+      throw error;
+    }
   }  
 
   async getSongsPlaylist(userID, playlistId) {
