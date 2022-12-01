@@ -13,21 +13,28 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 
 router.get('/stream', userService.isAuth, async(req, res) => {
     try {
-        if (!req || !req.query || !req.query.id) {
-            const error = new Error('Missing id');
+        if (!req || !req.query || !req.query.id || !req.query.device) {
+            const error = new Error('Missing id || device');
             error.code = '403';
             throw error;
         }
         console.log('Request stream');
         const videoId = req.query.id;
+        const device = req.query.device;
         const videoInfo = await ytdl.getInfo(videoId);
         if (!videoInfo || !videoInfo.formats) {
           res.status(200).json({success: false, error: 'not found', statusCode: 404});
         };
-        let audioFormat = ytdl.chooseFormat(videoInfo.formats, {
+        const audioFormat = ytdl.chooseFormat(videoInfo.formats, {
           filter: "audioonly",
           quality: "highestaudio"
         });
+        if (device !== 'apple') {
+          const result = { url: audioFormat.url, type: audioFormat.mimeType, quality: audioFormat.audioQuality };
+          console.log('Response stream', result);
+          res.status(200).json({ success: true, result });
+          return;
+        }
         const filterData = videoInfo.formats.filter(item => item?.mimeType.includes('audio/mp4') && (item?.audioQuality === 'AUDIO_QUALITY_MEDIUM' || 
         item?.audioQuality === 'AUDIO_QUALITY_HIGH'));
         const data = filterData && filterData[0] ? filterData[0] : audioFormat; 
