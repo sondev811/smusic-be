@@ -8,7 +8,7 @@ const { getUserInfo, signUp, login, updateCurrentPlaylist} = require('../control
 const ytdl = require('ytdl-core');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffmpeg = require('fluent-ffmpeg');
-const { createPlaylist, getPlaylist, getSongsPlaylist, insertSongPlaylist, removeItemPlaylist, removePlaylist, updateCurrentMusic, updateQueueList, getPlaylistById } = require('../controllers/playlist/playlist.controller');
+const { createPlaylist, getPlaylist, getSongsPlaylist, insertSongPlaylist, removeItemPlaylist, removePlaylist, updateCurrentMusic, updateQueueList, getPlaylistById, editPlaylistName } = require('../controllers/playlist/playlist.controller');
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 router.get('/stream', userService.isAuth, async(req, res) => {
@@ -266,6 +266,28 @@ router.post('/createPlaylist', userService.isAuth, async (req, res) => {
   
 });
 
+router.post('/editPlaylistName', userService.isAuth, async (req, res) => {
+  try {
+    if (!req || !req.body || !req.body.playlistName ||!req.body.playlistId) {
+      const error = new Error('Missing playlistName || playlistId');
+      error.code = '403';
+      throw error;
+    }
+    console.log('Request editPlaylistName');
+    const token = req.headers.authorization;
+    const response = await editPlaylistName(token, req.body.playlistName, req.body.playlistId);
+    console.log('Response editPlaylistName', response);
+    res.status(200).json({success: true, result: response});
+  } catch (err) {
+      if (err.code) {
+          res.status(err.code).json({error: err.message});           
+      } else {
+          res.status(500).json({error: err.message});         
+      }    
+  }
+  
+});
+
 router.get('/getPlaylist', userService.isAuth, async (req, res) => {
   try {
       console.log('Request getPlaylist');
@@ -282,6 +304,7 @@ router.get('/getPlaylist', userService.isAuth, async (req, res) => {
   }
   
 });
+
 
 router.get('/getPlaylistById', userService.isAuth, async (req, res) => {
   try {

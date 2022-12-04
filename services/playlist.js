@@ -131,7 +131,13 @@ class Playlist {
     } catch (error) {
         console.log(error);
     }
-}
+  }
+
+  async editPlaylistName(userID, playlistName, playlistId) {
+    const query = {_id: playlistId, userID};
+    const playlist = await playlistModel.findOneAndUpdate(query, {playlistName});
+    return playlist;
+  }
 
 }
 

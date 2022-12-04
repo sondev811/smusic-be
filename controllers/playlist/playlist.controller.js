@@ -32,6 +32,16 @@ const createPlaylist = async (token, playlistName) => {
   }
 }
 
+const editPlaylistName = async (token, playlistName, playlistId) => {
+  try {
+    const userID = await userService.getUserIdFromToken(token);
+    const result = await playlistService.editPlaylistName(userID, playlistName, playlistId);
+    return result;
+  } catch (error) {
+    
+  }
+}
+
 const removePlaylist = async (token, playlistId) => {
   try {
       const userID = await userService.getUserIdFromToken(token);
@@ -115,5 +125,6 @@ module.exports = {
   removeItemPlaylist, 
   updateCurrentMusic, 
   updateQueueList, 
-  getPlaylistById 
+  getPlaylistById,
+  editPlaylistName
 };
