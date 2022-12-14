@@ -21,6 +21,7 @@
     "googleapis": "^92.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.1.2",
+    "nodemailer": "^6.8.0",
     "nodemon": "^2.0.15",
     "ytdl-core": "^4.10.0"
   }

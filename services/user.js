@@ -3,6 +3,8 @@ const playlistModel = require('../models/Playlist.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const PlaylistModel = require('../models/Playlist.model');
+const nodemailer = require('nodemailer')
+
 require('dotenv').config();
 class User {
     constructor() {
@@ -156,6 +158,48 @@ class User {
           userInfo: user,
           queue
       };
+    }
+
+    async resetPassword(email) {
+      try {
+        const randomPassword = Math.random().toString(36).slice(-8);
+        const hashPassword = await bcrypt.hash(randomPassword, 12);
+        const user = await userModel.findOneAndUpdate({email}, {password: hashPassword});
+        if (!user) {
+          throw Error("Can not change password")
+        }
+        await this.sendEmail(email, user, randomPassword);
+        return {
+          success: true,
+          email
+        }
+      } catch (error) {
+        console.log(error, 'error');
+        throw Error(error.message);
+      }
+    }
+
+    async sendEmail(recipient, user, password) {
+      try {
+        const client = nodemailer.createTransport({
+          service: "Gmail",
+          auth: {
+              user: "sondev811@gmail.com",
+              pass: process.env.APP_PASSWORD
+          }
+        });
+      
+        client.sendMail(
+            {
+                from: "sondev811@gmail.com",
+                to: recipient,
+                subject: "Smusic - Request change password",
+                text: `Hello ${user.name}, This is new password: ${password}`
+            }
+        )
+      } catch (error) {
+        console.log("Can not send email")        
+      }
     }
 
 }

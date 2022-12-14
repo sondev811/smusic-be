@@ -43,4 +43,8 @@ const login = async (req) => {
     return await userService.login(req);
 }
 
-module.exports = {getUserInfo, signUp, login, updateCurrentPlaylist};
+const resetPassword = async (email) => {
+  return await userService.resetPassword(email);
+}
+
+module.exports = {getUserInfo, signUp, login, updateCurrentPlaylist, resetPassword};

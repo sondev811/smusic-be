@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 require('dotenv').config();
 const userService = require('../services/user');
-const { search, getYoutubeTrending, searchRecommend, saveSearchHistory, getSearchHistory } = require('../controllers/youtube/youtube.controller');
+const { search, getYoutubeTrending, searchRecommend, getSearchHistory } = require('../controllers/youtube/youtube.controller');
 const { getMusic } = require('../controllers/music/music.controller');
-const { getUserInfo, signUp, login, updateCurrentPlaylist} = require('../controllers/user/user.controller');
+const { getUserInfo, signUp, login, updateCurrentPlaylist, resetPassword} = require('../controllers/user/user.controller');
 const ytdl = require('ytdl-core');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffmpeg = require('fluent-ffmpeg');
@@ -94,27 +94,6 @@ router.get('/search', userService.isAuth, async (req, res) => {
     }
     
 });
-
-// router.post('/saveSearchHistory', userService.isAuth, async(req, res) => {
-//   try {
-//     if (!req || !req.body) {
-//         const error = new Error('Wrong body');
-//         error.code = '403';
-//         throw error;
-//     }
-//     console.log('Request saveSearchHistory.');
-//     const token = req.headers.authorization;
-//     const response = await saveSearchHistory(token, req.body);
-//     console.log('Response saveSearchHistory', response);
-//     res.status(200).json({success: true, result: response});
-// } catch (err) {
-//     if (err.code) {
-//         res.status(err.code).json({error: err.message});           
-//     } else {
-//         res.status(500).json({error: err.message});         
-//     }    
-// }
-// })
 
 router.get('/getYoutubeTrending', userService.isAuth, async (req, res) => {
     try {
@@ -305,7 +284,6 @@ router.get('/getPlaylist', userService.isAuth, async (req, res) => {
   
 });
 
-
 router.get('/getPlaylistById', userService.isAuth, async (req, res) => {
   try {
     if (!req || !req.query || !req.query.playlistId) {
@@ -468,6 +446,30 @@ router.post('/login', async (req, res) => {
             res.status(500).json({error: err.message});         
         }    
     }
+});
+
+router.post('/resetPassword', async (req, res) => {
+  try {
+      if (!req || !req.body || !req.body.email) {
+          const error = new Error('Wrong body');
+          error.code = '403';
+          throw error;
+      }
+      console.log('Request resetPassword');
+      const response = await resetPassword(req.body.email);
+      if (!response.success) {
+          res.status(200).json({success: false, error: response.error, statusCode: 404});
+          return;
+      }
+      console.log('Response resetPassword', response);
+      res.status(200).json({success: true, result: response.data});
+  } catch (err) {
+      if (err.code) {
+          res.status(err.code).json({error: err.message});           
+      } else {
+          res.status(500).json({error: err.message});         
+      }    
+  }
 });
 
 module.exports = router;
