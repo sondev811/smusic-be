@@ -462,7 +462,7 @@ router.post('/resetPassword', async (req, res) => {
           return;
       }
       console.log('Response resetPassword', response);
-      res.status(200).json({success: true, result: response.data});
+      res.status(200).json({success: true, result: response});
   } catch (err) {
       if (err.code) {
           res.status(err.code).json({error: err.message});           
