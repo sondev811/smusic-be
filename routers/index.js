@@ -10,8 +10,8 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffmpeg = require('fluent-ffmpeg');
 const { createPlaylist, getPlaylist, getSongsPlaylist, insertSongPlaylist, removeItemPlaylist, removePlaylist, updateCurrentMusic, updateQueueList, getPlaylistById, editPlaylistName } = require('../controllers/playlist/playlist.controller');
 ffmpeg.setFfmpegPath(ffmpegPath);
-const { exec } = require("child_process");
 const path = require('path');
+const youtubedl = require('youtube-dl-exec');
 
 const cookie = [
 {
@@ -282,28 +282,19 @@ router.get('/stream', userService.isAuth, async(req, res) => {
     console.log('Request stream');
     const videoId = req.query.id;
     const device = req.query.device;
-    const ytDlpPath = path.join(process.cwd(), "bin", "yt-dlp.exe");
-    const command = `${ytDlpPath} -g -f bestaudio https://www.youtube.com/watch?v=${videoId}`;
-    const extractUrl = await new Promise((resolve, reject) => {
-      exec(command, async (error, stdout, stderr) => {
-        if (error) {
-          console.error("Error downloading video:", error);
-        }
-        if (stdout) {
-          resolve(stdout);
-        }
-        if (stderr) {
-          console.error("YT-DLP stderr:", stderr);
-        }
-      });
+    // const ytDlpPath = path.join(process.cwd(), "bin", "yt-dlp.exe");
+    // const command = `${ytDlpPath} -g -f bestaudio https://www.youtube.com/watch?v=${videoId}`;
+    const extractUrl = await youtubedl(`https://www.youtube.com/watch?v=${videoId}`, {
+      format: 'bestaudio',
+      getUrl: true
     });
-    console.log('Response stream', result);
+    
+    console.log(extractUrl, 'url');
     res.status(200).json({
       success: true, 
       result: {
        url: extractUrl
     }});
-    console.log(getUrl, 'url');
     return;
     const agent = ytdl.createAgent(cookie);
     const videoInfo = await ytdl.getInfo(videoId, { agent });
