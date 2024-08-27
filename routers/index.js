@@ -5,298 +5,41 @@ const userService = require('../services/user');
 const { search, getYoutubeTrending, searchRecommend, getSearchHistory } = require('../controllers/youtube/youtube.controller');
 const { getMusic } = require('../controllers/music/music.controller');
 const { getUserInfo, signUp, login, updateCurrentPlaylist, resetPassword} = require('../controllers/user/user.controller');
-const ytdl = require("ytdl-core");
+const ytdl = require("@distube/ytdl-core");
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffmpeg = require('fluent-ffmpeg');
 const { createPlaylist, getPlaylist, getSongsPlaylist, insertSongPlaylist, removeItemPlaylist, removePlaylist, updateCurrentMusic, updateQueueList, getPlaylistById, editPlaylistName } = require('../controllers/playlist/playlist.controller');
 ffmpeg.setFfmpegPath(ffmpegPath);
-const path = require('path');
-const youtubedl = require('youtube-dl-exec');
+// const path = require('path');
+// const { exec } = require("child_process");
 
-const cookie = [
-{
-    "domain": ".youtube.com",
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "__Secure-1PAPISID",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": true,
-    "session": true,
-    "storeId": "0",
-    "value": "swmataVgFfxwfhNx/A-jcIzQWplnm9kwj-",
-    "id": 1
-},
-{
-    "domain": ".youtube.com",
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "__Secure-1PSID",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": true,
-    "session": true,
-    "storeId": "0",
-    "value": "g.a000nQjxJCrLKoU5M4-WN7Sq9a3MSsIc08jdnAhDxIzol6GluTc_LljyVPCt-XK14Diz1zcsQAACgYKAToSARMSFQHGX2MiHmbs1oeCfO_Prx_uG4jZ8BoVAUF8yKpu1z_GDooOpM56lYkPMIZf0076",
-    "id": 2
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1756152306.908353,
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "__Secure-1PSIDCC",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": true,
-    "session": false,
-    "storeId": "0",
-    "value": "AKEyXzWgAJn-PZwlRpaEo72feTRGdxta91KO2_MiowcAUjAA-iJq3uT0e8O55y4noXlo_p8zAg",
-    "id": 3
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1756152294.526806,
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "__Secure-1PSIDTS",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": true,
-    "session": false,
-    "storeId": "0",
-    "value": "sidts-CjEBUFGoh5Xo7CDfSg0RzGrut7r8IOa-cV-RUxlf72Kke5wkZdUcEJWomYh6dRyHBufgEAA",
-    "id": 4
-},
-{
-    "domain": ".youtube.com",
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "__Secure-3PAPISID",
-    "path": "/",
-    "sameSite": "no_restriction",
-    "secure": true,
-    "session": true,
-    "storeId": "0",
-    "value": "swmataVgFfxwfhNx/A-jcIzQWplnm9kwj-",
-    "id": 5
-},
-{
-    "domain": ".youtube.com",
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "__Secure-3PSID",
-    "path": "/",
-    "sameSite": "no_restriction",
-    "secure": true,
-    "session": true,
-    "storeId": "0",
-    "value": "g.a000nQjxJCrLKoU5M4-WN7Sq9a3MSsIc08jdnAhDxIzol6GluTc_5jmNYSTvhLu8H6OIMiy5ugACgYKAQESARMSFQHGX2Mi3FVio3tpfqYLrd7afzvlBxoVAUF8yKqKquz9gjAxQTaq_yP2gzfA0076",
-    "id": 6
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1756152306.908632,
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "__Secure-3PSIDCC",
-    "path": "/",
-    "sameSite": "no_restriction",
-    "secure": true,
-    "session": false,
-    "storeId": "0",
-    "value": "AKEyXzVQ0HTF-n9Txd4lJyCcXQow8OpAiZBIjHs27RlhdIS4Cb1dOIqW8eYOmvTQyIBjTXKr",
-    "id": 7
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1756152294.527166,
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "__Secure-3PSIDTS",
-    "path": "/",
-    "sameSite": "no_restriction",
-    "secure": true,
-    "session": false,
-    "storeId": "0",
-    "value": "sidts-CjEBUFGoh5Xo7CDfSg0RzGrut7r8IOa-cV-RUxlf72Kke5wkZdUcEJWomYh6dRyHBufgEAA",
-    "id": 8
-},
-{
-    "domain": ".youtube.com",
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "APISID",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": false,
-    "session": true,
-    "storeId": "0",
-    "value": "PcjEH62CFtcFbAL4/ANlk8dgfMFeMdKr0m",
-    "id": 9
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1724618002.838923,
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "GPS",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": true,
-    "session": false,
-    "storeId": "0",
-    "value": "1",
-    "id": 10
-},
-{
-    "domain": ".youtube.com",
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "HSID",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": false,
-    "session": true,
-    "storeId": "0",
-    "value": "ATghnHl5zQqKa-8Ig",
-    "id": 11
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1759176294.634872,
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "LOGIN_INFO",
-    "path": "/",
-    "sameSite": "no_restriction",
-    "secure": true,
-    "session": false,
-    "storeId": "0",
-    "value": "AFmmF2swRAIgRE3T-JMgSR6C2Ed6PwQon_YhtO2oKJ1bBDkakA2G9FwCIE-USj00m7TtlH0SwXHUPlxSEAWRmpfBdOumWngQLzOK:QUQ3MjNmelRUS25EX012clo4RExKUzJFYWN2R0FidV93SFNwMlJ1bUIyWXJnbVhwSmVsZkVWazJJSk00NmdlSC01RWFjZUpvMmZoZ3dqRFJXMDRWd2tJSWlORkhyT1F0MWxxa04xYnVVRTc1blNaQ2lDTlVtZkVDX0gtdXY3NTlSUWdGSG1mQnFiX2xQQzJzQkFxTkJZeFRJSjNHdF9pVXVR",
-    "id": 12
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1759176303.794721,
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "PREF",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": true,
-    "session": false,
-    "storeId": "0",
-    "value": "f4=4000000&f6=40000000&tz=Asia.Bangkok",
-    "id": 13
-},
-{
-    "domain": ".youtube.com",
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "SAPISID",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": true,
-    "session": true,
-    "storeId": "0",
-    "value": "swmataVgFfxwfhNx/A-jcIzQWplnm9kwj-",
-    "id": 14
-},
-{
-    "domain": ".youtube.com",
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "SID",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": false,
-    "session": true,
-    "storeId": "0",
-    "value": "g.a000nQjxJCrLKoU5M4-WN7Sq9a3MSsIc08jdnAhDxIzol6GluTc_q42TlvJKdh11kXh1O3DxvAACgYKAeQSARMSFQHGX2MiSYA_cEw2eBsWMXRqrBjKzxoVAUF8yKp-WF72h0ROLuCMAjOZNH880076",
-    "id": 15
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1756152306.907877,
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "SIDCC",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": false,
-    "session": false,
-    "storeId": "0",
-    "value": "AKEyXzUv_wEmv1ZiTW4OV2QFZ8tCRTehWE2SGmDmjSxWQK_yx3ze23kEgbcRVQlSFIMv-x9tUQ",
-    "id": 16
-},
-{
-    "domain": ".youtube.com",
-    "hostOnly": false,
-    "httpOnly": true,
-    "name": "SSID",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": true,
-    "session": true,
-    "storeId": "0",
-    "value": "API5boLLHon7MFn6L",
-    "id": 17
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1724616309,
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "ST-tladcw",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": false,
-    "session": false,
-    "storeId": "0",
-    "value": "session_logininfo=AFmmF2swRAIgRE3T-JMgSR6C2Ed6PwQon_YhtO2oKJ1bBDkakA2G9FwCIE-USj00m7TtlH0SwXHUPlxSEAWRmpfBdOumWngQLzOK%3AQUQ3MjNmelRUS25EX012clo4RExKUzJFYWN2R0FidV93SFNwMlJ1bUIyWXJnbVhwSmVsZkVWazJJSk00NmdlSC01RWFjZUpvMmZoZ3dqRFJXMDRWd2tJSWlORkhyT1F0MWxxa04xYnVVRTc1blNaQ2lDTlVtZkVDX0gtdXY3NTlSUWdGSG1mQnFiX2xQQzJzQkFxTkJZeFRJSjNHdF9pVXVR",
-    "id": 18
-},
-{
-    "domain": ".youtube.com",
-    "expirationDate": 1724616310,
-    "hostOnly": false,
-    "httpOnly": false,
-    "name": "ST-xuwub9",
-    "path": "/",
-    "sameSite": "unspecified",
-    "secure": false,
-    "session": false,
-    "storeId": "0",
-    "value": "session_logininfo=AFmmF2swRAIgRE3T-JMgSR6C2Ed6PwQon_YhtO2oKJ1bBDkakA2G9FwCIE-USj00m7TtlH0SwXHUPlxSEAWRmpfBdOumWngQLzOK%3AQUQ3MjNmelRUS25EX012clo4RExKUzJFYWN2R0FidV93SFNwMlJ1bUIyWXJnbVhwSmVsZkVWazJJSk00NmdlSC01RWFjZUpvMmZoZ3dqRFJXMDRWd2tJSWlORkhyT1F0MWxxa04xYnVVRTc1blNaQ2lDTlVtZkVDX0gtdXY3NTlSUWdGSG1mQnFiX2xQQzJzQkFxTkJZeFRJSjNHdF9pVXVR",
-    "id": 19
-}
+const proxies = [
+  '152.26.229.66:9443', 
+  '152.26.229.42:9443', 
+  '152.26.229.88:9443', 
+  '152.26.231.42:9443', 
+  '152.26.231.86:9443', 
+  '152.26.231.77:9443', 
+  '152.26.229.88:9443', 
+  '177.234.241.27:999', 
+  '177.234.241.30:999', 
+  '177.234.241.26:999', 
+  '177.234.241.25:999'
 ]
-router.get('/stream', userService.isAuth, async(req, res) => {
+
+let currentProxy = 0;
+
+const streamAudio = async (req, res) => {
   try {
     if (!req || !req.query || !req.query.id || !req.query.device) {
-        const error = new Error('Missing id || device');
-        error.code = '403';
-        throw error;
+      const error = new Error('Missing id || device');
+      error.code = '403';
+      throw error;
     }
     console.log('Request stream');
     const videoId = req.query.id;
     const device = req.query.device;
-    // const ytDlpPath = path.join(process.cwd(), "bin", "yt-dlp.exe");
-    // const command = `${ytDlpPath} -g -f bestaudio https://www.youtube.com/watch?v=${videoId}`;
-    const extractUrl = await youtubedl(`https://www.youtube.com/watch?v=${videoId}`, {
-      format: 'bestaudio',
-      getUrl: true
-    });
-    
-    console.log(extractUrl, 'url');
-    res.status(200).json({
-      success: true, 
-      result: {
-       url: extractUrl
-    }});
-    return;
-    const agent = ytdl.createAgent(cookie);
+    const agent = ytdl.createProxyAgent({ uri: `http://${proxies[currentProxy]}` });
     const videoInfo = await ytdl.getInfo(videoId, { agent });
     if (!videoInfo || !videoInfo.formats) {
       res.status(200).json({success: false, error: 'not found', statusCode: 404});
@@ -318,13 +61,18 @@ router.get('/stream', userService.isAuth, async(req, res) => {
     console.log('Response stream', result);
     res.status(200).json({success: true, result});
   } catch (err) {
-    if (err?.code && err?.message) {
-        res.status(err.code).json({error: err.message});           
+    console.log(err, 'error');
+    if (currentProxy < proxies.length - 1) {
+      currentProxy++;
+      console.log('reconnect to proxy', proxies[currentProxy]);
+      streamAudio(req, res);
     } else {
-        res.status(500).json({error: err?.message || 'Server error'});         
-    }   
+      res.status(500).json({error: err?.message || 'Server error'});         
+    }
   }
-});
+}
+
+router.get('/stream', userService.isAuth, streamAudio);
 
 router.get('/searchRecommend', userService.isAuth, async (req, res) => {
   try {
